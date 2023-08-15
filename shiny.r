@@ -5,10 +5,46 @@ ui <- fluidPage(
     titlePanel("Comparable Companies Analysis"),
     sidebarLayout(
         sidebarPanel(
-            numericInput("revenue", "Revenue:", 1e6, min = 0, max = 1e9),
-            numericInput("net_income", "Net Income:", 1e5, min = 0, max = 1e8),
-            numericInput("pe_ratio", "PE Ratio:", 20, min = 0, max = 50),
-            numericInput("shares", "Shares Outstanding:", 1e6, min = 0, max = 1e9)
+            fluidRow(
+                column(
+                    12,
+                    numericInput("revenue", "Current Enterprise Value:", 1e6, min = 0, max = 1e9)
+                ),
+                column(
+                    12,
+                    numericInput("shares", "Shares Outstanding:", 1e6, min = 0, max = 1e9)
+                )
+            ),
+            # fluidRow(
+            #     column(
+            #         6,
+            #         numericInput(, "EV/EBITDA Upper:", 1e5, min = 0, max = 1e8)
+            #     ),
+            #     column(
+            #         6,
+            #         numericInput(, "EV/EBITDA Lower:", 20, min = 0, max = 50)
+            #     )
+            # )
+            # fluidRow(
+            #     column(
+            #         6,
+            #         numericInput(, "EV/FCF Upper:", 1e5, min = 0, max = 1e8)
+            #     ),
+            #     column(
+            #         6,
+            #         numericInput(, "EV/FCF Lower:", 20, min = 0, max = 50)
+            #     )
+            # )
+            fluidRow(
+                column(
+                    6,
+                    numericInput("net_income", "EV/Sales Upper:", 1e5, min = 0, max = 1e8)
+                ),
+                column(
+                    6,
+                    numericInput("pe_ratio", "EV/Sales Lower:", 20, min = 0, max = 50)
+                )
+            )
         ),
         mainPanel(
             h1("test1234"),
