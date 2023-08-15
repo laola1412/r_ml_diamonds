@@ -1,60 +1,44 @@
 library(shiny)
-library(bslib)
-library(dplyr)
 library(ggplot2)
-library(ggExtra)
 
-penguins_csv <- "https://raw.githubusercontent.com/jcheng5/simplepenguins.R/main/penguins.csv"
-
-df <- readr::read_csv(penguins_csv)
-# Find subset of columns that are suitable for scatter plot
-df_num <- df |> select(where(is.numeric), -Year)
-
-ui <- page_sidebar(
-    theme = bs_theme(bootswatch = "minty"),
-    sidebar = sidebar(
-        varSelectInput("xvar", "X variable", df_num, selected = "Bill Length (mmxxxx)"),
-        varSelectInput("yvar", "Y variable", df_num, selected = "Bill Depth (mm)yyyyy"),
-        checkboxGroupInput(
-            "species", "Filter by species",
-            choices = unique(df$Species),
-            selected = unique(df$Species)
+ui <- fluidPage(
+    titlePanel("Comparable Companies Analysis"),
+    sidebarLayout(
+        sidebarPanel(
+            numericInput("revenue", "Revenue:", 1e6, min = 0, max = 1e9),
+            numericInput("net_income", "Net Income:", 1e5, min = 0, max = 1e8),
+            numericInput("pe_ratio", "PE Ratio:", 20, min = 0, max = 50),
+            numericInput("shares", "Shares Outstanding:", 1e6, min = 0, max = 1e9)
         ),
-        checkboxInput("by_species", "Show species", TRUE),
-        checkboxInput("show_margins", "Show marginal plots", TRUE),
-        checkboxInput("smooth", "Add smoother"),
-    ),
-    plotOutput("scatter")
+        mainPanel(
+            h1("test1234"),
+            plotOutput("stock_plot")
+        )
+    )
 )
 
-server <- function(input, output, session) {
-    subsetted <- reactive({
-        req(input$species)
-        df |> filter(Species %in% input$species)
+server <- function(input, output) {
+    output$stock_plot <- renderPlot({
+        valuation <- input$net_income * input$pe_ratio / input$shares
+
+        stock_dates <- seq(as.Date("2018-08-15"), as.Date("2028-08-15"), by = "month")
+
+        past_prices <- seq(20, 80, length.out = length(stock_dates) - 61)
+        future_prices <- seq(80, 120, length.out = 60)
+        prices <- c(past_prices, future_prices, valuation)
+
+        stock_data <- data.frame(date = stock_dates, price = prices)
+
+        ggplot(stock_data, aes(x = date, y = price)) +
+            geom_line() +
+            geom_line(data = stock_data[61:121, ], aes(linetype = "dotted")) +
+            geom_point(
+                data = stock_data[length(stock_data$date), ],
+                aes(colour = "Predicted"), size = 3
+            ) +
+            labs(title = "Stock Price Prediction") +
+            theme(legend.position = "none")
     })
-
-    output$scatter <- renderPlot(
-        {
-            p <- ggplot(subsetted(), aes(!!input$xvar, !!input$yvar)) +
-                list(
-                    theme(legend.position = "bottom"),
-                    if (input$by_species) aes(color = Species),
-                    geom_point(),
-                    if (input$smooth) geom_smooth()
-                )
-
-            if (input$show_margins) {
-                margin_type <- if (input$by_species) "density" else "histogram"
-                p <- ggExtra::ggMarginal(p,
-                    type = margin_type, margins = "both",
-                    size = 8, groupColour = input$by_species, groupFill = input$by_species
-                )
-            }
-
-            p
-        },
-        res = 100
-    )
 }
 
 shinyApp(ui, server)
